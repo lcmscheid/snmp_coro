@@ -1,0 +1,80 @@
+# clang-tidy 22
+---
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -clang-analyzer-core.CallAndMessage,
+  -clang-analyzer-core.StackAddressEscape,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-avoid-reference-coroutine-parameters,
+  -cppcoreguidelines-missing-std-forward,
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-rvalue-reference-param-not-moved,
+  -misc-include-cleaner,
+  -misc-non-private-member-variables-in-classes,
+  -misc-no-recursion,
+  -portability-avoid-pragma-once,
+  -modernize-use-trailing-return-type,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-qualified-auto
+
+# Rationale for the exclusions above:
+#  - avoid-reference-coroutine-parameters / rvalue-reference-param-not-moved: Asio's
+#    completion-token idiom (Token&&) and co_composed's state parameter trip these by design.
+#  - missing-std-forward: asio::async_initiate takes the completion token by lvalue reference
+#    by design, so a forwarded Token&& is never std::forward-ed.
+#  - clang-analyzer-core.CallAndMessage: false positive inside Boost.Asio's co_composed promise
+#    (the analyzer does not model coroutine frames). Runtime coverage: the asan preset.
+#  - clang-analyzer-core.StackAddressEscape: false positive in Boost.Asio's
+#    associated_executor<any_completion_handler>::get, which returns by value. Runtime
+#    coverage: the asan preset (detect_stack_use_after_return).
+#  - pro-bounds-avoid-unchecked-container-access: operator[] is bounds-checked in the debug
+#    preset (_GLIBCXX_ASSERTIONS) and under ASan; .at() everywhere would only add noise.
+#  - portability-avoid-pragma-once: every supported compiler (GCC, Clang, MSVC) supports it.
+#  - misc-include-cleaner: too noisy with Boost's forwarding headers.
+#  - misc-non-private-member-variables-in-classes: aggregates (Varbind, Error, Options) are public by design.
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*/(include/snmp_coro|src|tests|examples)/.*'
+FormatStyle: file
+
+CheckOptions:
+  - { key: readability-identifier-naming.NamespaceCase,              value: lower_case }
+  - { key: readability-identifier-naming.ClassCase,                  value: CamelCase }
+  - { key: readability-identifier-naming.StructCase,                 value: CamelCase }
+  - { key: readability-identifier-naming.EnumCase,                   value: CamelCase }
+  - { key: readability-identifier-naming.EnumConstantCase,           value: camelBack }
+  - { key: readability-identifier-naming.TypeAliasCase,              value: CamelCase }
+  - { key: readability-identifier-naming.TypeAliasIgnoredRegexp,     value: '^executor_type$' }
+  - { key: readability-identifier-naming.TemplateParameterCase,      value: CamelCase }
+  - { key: readability-identifier-naming.FunctionCase,               value: camelBack }
+  - { key: readability-identifier-naming.MethodCase,                 value: camelBack }
+  - { key: readability-identifier-naming.VariableCase,               value: camelBack }
+  - { key: readability-identifier-naming.ParameterCase,              value: camelBack }
+  - { key: readability-identifier-naming.ConstexprVariableCase,      value: camelBack }
+  - { key: readability-identifier-naming.PublicMemberCase,           value: camelBack }
+  - { key: readability-identifier-naming.PrivateMemberCase,          value: camelBack }
+  - { key: readability-identifier-naming.PrivateMemberPrefix,        value: m_ }
+  - { key: readability-identifier-naming.ProtectedMemberCase,        value: camelBack }
+  - { key: readability-identifier-naming.ProtectedMemberPrefix,      value: m_ }
+  - { key: readability-identifier-naming.MacroDefinitionCase,        value: UPPER_CASE }
+  - { key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor, value: true }
+  - { key: bugprone-unused-return-value.AllowCastToVoid,             value: true }
+  - { key: misc-const-correctness.WarnPointersAsValues,              value: false }
+  - { key: readability-implicit-bool-conversion.AllowPointerConditions, value: true }
+  - { key: performance-unnecessary-value-param.AllowedTypes,         value: '.*Handler$' }
+...

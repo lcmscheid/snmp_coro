@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Supported platform: Ubuntu 26.04 LTS only (ADR 0008). The runner image ships GCC 15, Clang 22
+# and CMake 4.4; Boost 1.90 and net-snmp 5.9.4 come from the Ubuntu archive.
+jobs:
+  format:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: clang-format
+        run: git ls-files '*.cpp' '*.hpp' | xargs clang-format-22 --dry-run --Werror
+
+  build-test:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-26.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: "gcc-15 debug",          preset: debug }
+          - { name: "gcc-15 asan+ubsan",     preset: asan }
+          - { name: "gcc-15 shared",         preset: shared }
+          - { name: "clang-22 + clang-tidy", preset: tidy }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ninja-build g++ clang-22 clang-tidy-22 \
+            libboost-dev libsnmp-dev libssl-dev snmpd catch2
+          # The tests start their own agent on a free port; the packaged one is not needed.
+          sudo systemctl stop snmpd || true
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }}

@@ -1,0 +1,14 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
+find_dependency(Boost 1.90 CONFIG COMPONENTS headers)
+# Needed for static builds, where NetSNMP::NetSNMP and OpenSSL::Crypto appear in the link
+# interface.
+find_dependency(NetSNMP 5.9)
+find_dependency(OpenSSL 3 COMPONENTS Crypto)
+list(POP_FRONT CMAKE_MODULE_PATH)
+
+include("${CMAKE_CURRENT_LIST_DIR}/snmp_coroTargets.cmake")
+check_required_components(snmp_coro)

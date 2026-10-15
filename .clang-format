@@ -1,0 +1,60 @@
+# clang-format 22
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++20
+
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -4
+NamespaceIndentation: None
+FixNamespaceComments: true
+IndentCaseLabels: false
+
+PointerAlignment: Left
+ReferenceAlignment: Pointer
+QualifierAlignment: Leave
+
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLambdasOnASingleLine: Inline
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeConceptDeclarations: Always
+RequiresClausePosition: OwnLine
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: NextLine
+BreakInheritanceList: BeforeColon
+
+InsertBraces: true
+InsertNewlineAtEOF: true
+SeparateDefinitionBlocks: Leave
+EmptyLineBeforeAccessModifier: LogicalBlock
+MaxEmptyLinesToKeep: 1
+
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Own headers
+  - Regex: '^<snmp_coro/'
+    Priority: 1
+  # Test framework
+  - Regex: '^<catch2/'
+    Priority: 3
+  # Boost
+  - Regex: '^<boost/'
+    Priority: 4
+  # net-snmp (C, macro-heavy) last among libraries
+  - Regex: '^<net-snmp/'
+    Priority: 7
+  # C++ standard library
+  - Regex: '^<[a-z_]+>$'
+    Priority: 5
+  # POSIX / C headers
+  - Regex: '^<.*\.h>$'
+    Priority: 6
+  # Local includes
+  - Regex: '^"'
+    Priority: 2
+...

@@ -1,0 +1,17 @@
+---
+InheritParentConfig: true
+# Catch2-specific false positives:
+#  - bugprone-chained-comparison: CHECK(a == b) expands to `Catch::Decomposer() <= a == b`.
+#  - bugprone-unchecked-optional-access: the check does not know REQUIRE(opt.has_value()) aborts.
+#  - clang-analyzer-optin.core.EnumCastOutOfRange: Catch2's ResultDisposition::Flags is a bitmask
+#    enum; its operator| legitimately produces combined values.
+# Test-fixture choices:
+#  - bugprone-throwing-static-initialization / cert-err58-cpp: test-wide constant OIDs are
+#    globals; a bad literal fails the test binary at start-up, which is what we want.
+Checks: >
+  -bugprone-chained-comparison,
+  -bugprone-unchecked-optional-access,
+  -bugprone-throwing-static-initialization,
+  -cert-err58-cpp,
+  -clang-analyzer-optin.core.EnumCastOutOfRange
+...
